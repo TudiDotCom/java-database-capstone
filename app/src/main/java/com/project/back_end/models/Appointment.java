@@ -2,6 +2,11 @@ package com.project.back_end.models;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import jakarta.validation.constraints.*;
+
+import jakarta.persistence.*;
 
 @Entity
 public class Appointment {

@@ -1,5 +1,7 @@
 package com.project.back_end.models;
-
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 public class Patient {
     

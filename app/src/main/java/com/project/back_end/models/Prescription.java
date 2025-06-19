@@ -1,5 +1,10 @@
 package com.project.back_end.models;
 
+import jakarta.validation.constraints.*;
+//import org.springframework.data.mongodb.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 @Document(collection = "prescriptions")
 public class Prescription {
     
