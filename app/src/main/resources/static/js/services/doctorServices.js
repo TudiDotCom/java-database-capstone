@@ -1,3 +1,106 @@
+// doctorService.js
+
+import { BASE_API_URL } from '../config/config.js';
+
+const DOCTOR_API = `${BASE_API_URL}/doctor`;
+
+/**
+ * Fetch all doctors from the API.
+ * @returns {Promise<Array>} - Array of doctor objects or an empty array.
+ */
+export async function getDoctors() {
+  try {
+    const response = await fetch(`${DOCTOR_API}/all`);
+    const data = await response.json();
+    return data.doctors || [];
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
+    return [];
+  }
+}
+
+/**
+ * Delete a doctor by ID.
+ * @param {number|string} doctorId - ID of the doctor to delete.
+ * @param {string} token - Authentication token.
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function deleteDoctor(doctorId, token) {
+  try {
+    const response = await fetch(`${DOCTOR_API}/delete/${doctorId}/${token}`, {
+      method: 'DELETE'
+    });
+    const result = await response.json();
+    return {
+      success: response.ok,
+      message: result.message || 'Doctor deleted successfully'
+    };
+  } catch (error) {
+    console.error('Error deleting doctor:', error);
+    return {
+      success: false,
+      message: 'Failed to delete doctor'
+    };
+  }
+}
+
+/**
+ * Save (create) a new doctor.
+ * @param {Object} doctor - Doctor object to save.
+ * @param {string} token - Authentication token.
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function saveDoctor(doctor, token) {
+  try {
+    const response = await fetch(`${DOCTOR_API}/save/${token}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(doctor)
+    });
+
+    const result = await response.json();
+    return {
+      success: response.ok,
+      message: result.message || 'Doctor saved successfully'
+    };
+  } catch (error) {
+    console.error('Error saving doctor:', error);
+    return {
+      success: false,
+      message: 'Failed to save doctor'
+    };
+  }
+}
+
+/**
+ * Filter doctors by name, time, and specialty.
+ * @param {string|null} name - Name filter or null.
+ * @param {string|null} time - Time filter (AM/PM) or null.
+ * @param {string|null} specialty - Specialty filter or null.
+ * @returns {Promise<Array>} - Filtered list of doctors.
+ */
+export async function filterDoctors(name, time, specialty) {
+  try {
+    const url = `${DOCTOR_API}/filter/${name || 'null'}/${time || 'null'}/${specialty || 'null'}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.error('Error filtering doctors:', response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.doctors || [];
+  } catch (error) {
+    console.error('Error filtering doctors:', error);
+    alert('Something went wrong while filtering doctors.');
+    return [];
+  }
+}
+
+
 /*
   Import the base API URL from the config file
   Define a constant DOCTOR_API to hold the full endpoint for doctor-related actions
