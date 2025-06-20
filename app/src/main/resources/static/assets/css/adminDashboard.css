@@ -1,4 +1,188 @@
-/*this is the style sheet for the adminDashboard. */
+
+/* adminDashboard.css */
+
+/* === RESET & BASE STYLES === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    height: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* === LAYOUT WRAPPER === */
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* === HEADINGS === */
+  h2 {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 50px;
+    color: #003e3e;
+  }
+  
+  /* === MAIN CONTENT SECTION === */
+  .main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-image: url('../assets/images/background/index.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  
+  /* === SEARCH & FILTER BAR === */
+  .filter-bar {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  #searchBar,
+  #timeFilter,
+  #specialtyFilter {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    min-width: 200px;
+  }
+  
+  /* === BUTTON STYLES === */
+  button {
+    background-color: #A62B1F;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    width: 200px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #8c231a;
+  }
+  
+  /* Admin-specific button */
+  .adminBtn {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+    width: 110px;
+    padding: 10px 0;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+  
+  .adminBtn:hover {
+    color: #A62B1F;
+  }
+  
+  /* === DOCTOR CARD LIST === */
+  .doctor-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  /* Example card styling (adapt as needed) */
+  .doctor-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 280px;
+    text-align: left;
+  }
+  
+  /* === MODAL STYLING === */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal.show {
+    display: flex;
+  }
+  
+  #modal-body {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+  }
+  
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+  }
+  
+  /* Modal form input */
+  #modal-body input,
+  #modal-body select {
+    display: block;
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+  
+  #modal-body input:focus {
+    border-color: #A62B1F;
+    outline: none;
+  }
+  
+  /* Responsive for smaller devices */
+  @media (max-width: 600px) {
+    .filter-bar {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .doctor-card {
+      width: 90%;
+    }
+  
+    #modal-body {
+      width: 95%;
+    }
+  }
+  
+
 
 /* 
 Global Reset (`*`)
