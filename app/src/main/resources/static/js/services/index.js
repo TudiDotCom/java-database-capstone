@@ -1,11 +1,11 @@
 // index.js
 
 // Import modal handling logic and base API URL
-import { openModal } from '../js/util.js';
-import { BASE_API_URL } from '../js/config/config.js';
+import { openModal } from '../components/modals.js';
+import { BASE_API_URL } from '../config/config.js';
 
 // Define API endpoints
-const ADMIN_API = `${BASE_API_URL}/admin/login`;
+const ADMIN_API = `${BASE_API_URL}/admin`;
 const DOCTOR_API = `${BASE_API_URL}/doctor/login`;
 
 // Ensure DOM is loaded before running script
@@ -24,8 +24,8 @@ window.onload = () => {
 
 // Admin login handler
 window.adminLoginHandler = async () => {
-  const username = document.getElementById('adminUsername').value;
-  const password = document.getElementById('adminPassword').value;
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
   const admin = { username, password };
 

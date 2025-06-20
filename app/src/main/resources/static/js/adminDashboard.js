@@ -1,6 +1,7 @@
-import { getDoctors, filterDoctors, saveDoctor } from './services/adminService.js';
-import { createDoctorCard } from '../components/doctorCard.js';
-import { openModal, closeModal } from '..components/modals.js';
+import { createDoctorCard } from './components/doctorCard.js';
+import { openModal , closeModal } from './components/modals.js';
+import { getDoctors, filterDoctors, saveDoctor } 
+    from './services/doctorServices.js';
 
 const contentDiv = document.getElementById('content');
 const searchBar = document.getElementById('searchBar');
@@ -75,10 +76,13 @@ window.adminAddDoctor = async function () {
   const email = document.getElementById('doctorEmail')?.value.trim();
   const phone = document.getElementById('doctorPhone')?.value.trim();
   const password = document.getElementById('doctorPassword')?.value.trim();
-  const specialty = document.getElementById('doctorSpecialty')?.value.trim();
-  const availableTimes = document.getElementById('doctorTimes')?.value.trim();
+  const specialty = document.getElementById('specialization')?.value.trim();
+ // const availableTimes = document.getElementById('doctorTimes')?.value.trim();
 
-  if (!name || !email || !phone || !password || !specialty || !availableTimes) {
+  const checkboxes = document.querySelectorAll('input[name="availability"]:checked');
+  const selectedAvailability= Array.from(checkboxes).map(cb => cb.value);
+  
+  if (!name || !email || !phone || !password || !specialty || !selectedAvailability) {
     alert('Please fill in all fields.');
     return;
   }
@@ -95,7 +99,7 @@ window.adminAddDoctor = async function () {
     phone,
     password,
     specialty,
-    availableTimes
+    selectedAvailability
   };
 
   try {
