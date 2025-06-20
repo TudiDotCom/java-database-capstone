@@ -1,5 +1,60 @@
 <!-- index.html -->
 <!-- 
+Landing page where users select their role (Admin, Patient, Doctor).
+Dynamic header/footer & modal-based login are injected via JS.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Role</title>
+  <link rel="icon" href="../assets/images/logo/Logo.png">
+  <link rel="stylesheet" href="../assets/css/index.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script src="../js/util.js" defer></script>
+  <script src="../js/render.js" defer></script>
+  <script src="../js/components/header.js" defer></script>
+  <script src="../js/components/footer.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="wrapper">
+      <!-- Header Placeholder -->
+      <div id="header"></div>
+
+      <!-- Main Content -->
+      <main>
+        <h1>Select Your Role</h1>
+        <div class="role-buttons">
+          <button id="admin-btn" class="role-btn">Admin</button>
+          <button id="patient-btn" class="role-btn">Patient</button>
+          <button id="doctor-btn" class="role-btn">Doctor</button>
+        </div>
+      </main>
+
+      <!-- Footer Placeholder -->
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <!-- Modal Structure -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="close-btn" id="modal-close">&times;</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/index.js"></script>
+</body>
+</html>
+
+
+
+
+<!-- 
 
 Step-by-Step Explanation of `index.html`.
 This file allows users to select a role (Admin, Patient, Doctor) 
