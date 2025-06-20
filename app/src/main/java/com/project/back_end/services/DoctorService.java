@@ -1,6 +1,200 @@
 package com.project.back_end.services;
 
+import com.project.back_end.model.Doctor;
+import com.project.back_end.model.Appointment;
+import com.project.back_end.repo.DoctorRepository;
+import com.project.back_end.repo.AppointmentRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
 public class DoctorService {
+
+    private final DoctorRepository doctorRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final TokenService tokenService;
+
+    // Constructor injection
+    public DoctorService(DoctorRepository doctorRepository,
+                         AppointmentRepository appointmentRepository,
+                         TokenService tokenService) {
+        this.doctorRepository = doctorRepository;
+        this.appointmentRepository = appointmentRepository;
+        this.tokenService = tokenService;
+    }
+
+    // 4. getDoctorAvailability
+    @Transactional(readOnly = true)
+    public List<LocalTime> getDoctorAvailability(Long doctorId, String date) {
+        // Assuming you have a method to get doctor's available times as List<LocalTime>
+        Optional<Doctor> doctorOpt = doctorRepository.findById(doctorId);
+        if (doctorOpt.isEmpty()) return new ArrayList<>();
+
+        Doctor doctor = doctorOpt.get();
+        List<LocalTime> allSlots = doctor.getAvailableTimes(); // assume this returns List<LocalTime>
+
+        // Fetch all appointments on that date
+        List<Appointment> appointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
+            doctorId,
+            date.atStartOfDay(),
+            date.atStartOfDay().plusDays(1)
+        );
+
+        // Remove booked slots
+        List<LocalTime> bookedSlots = appointments.stream()
+            .map(app -> app.getAppointmentTime().toLocalTime())
+            .collect(Collectors.toList());
+
+        return allSlots.stream()
+                .filter(slot -> !bookedSlots.contains(slot))
+                .collect(Collectors.toList());
+    }
+
+    // 5. saveDoctor
+    @Transactional
+    public int saveDoctor(Doctor doctor) {
+        try {
+            if (doctorRepository.findByEmail(doctor.getEmail()) != null) {
+                return -1; // conflict, email exists
+            }
+            doctorRepository.save(doctor);
+            return 1; // success
+        } catch (Exception e) {
+            // log error
+            return 0; // internal error
+        }
+    }
+
+    // 6. updateDoctor
+    @Transactional
+    public int updateDoctor(Doctor doctor) {
+        if (!doctorRepository.existsById(doctor.getId())) {
+            return -1; // not found
+        }
+        try {
+            doctorRepository.save(doctor);
+            return 1; // success
+        } catch (Exception e) {
+            // log error
+            return 0; // error
+        }
+    }
+
+    // 7. getDoctors
+    @Transactional(readOnly = true)
+    public List<Doctor> getDoctors() {
+        List<Doctor> doctors = doctorRepository.findAll();
+        // assuming availableTimes is eagerly loaded or handled by JPA fetch
+        return doctors;
+    }
+
+    // 8. deleteDoctor
+    @Transactional
+    public int deleteDoctor(Long doctorId) {
+        if (!doctorRepository.existsById(doctorId)) {
+            return -1; // not found
+        }
+        try {
+            appointmentRepository.deleteAllByDoctorId(doctorId);
+            doctorRepository.deleteById(doctorId);
+            return 1; // success
+        } catch (Exception e) {
+            // log error
+            return 0; // error
+        }
+    }
+
+    // 9. validateDoctor (login)
+    @Transactional(readOnly = true)
+    public String validateDoctor(String email, String password) {
+        Doctor doctor = doctorRepository.findByEmail(email);
+        if (doctor == null) {
+            return "Doctor not found";
+        }
+        // Assuming password is hashed and compare properly here
+        if (!doctor.getPassword().equals(password)) {
+            return "Invalid password";
+        }
+        // Generate token (assuming tokenService generates JWT or similar)
+        return tokenService.generateToken(doctor);
+    }
+
+    // 10. findDoctorByName
+    @Transactional(readOnly = true)
+    public List<Doctor> findDoctorByName(String name) {
+        List<Doctor> doctors = doctorRepository.findByNameLike(name);
+        // Ensure availableTimes are loaded if lazy
+        doctors.forEach(doc -> doc.getAvailableTimes().size());
+        return doctors;
+    }
+
+    // 11. filterDoctorsByNameSpecilityandTime
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorsByNameSpecilityandTime(String name, String specialty, String timePeriod) {
+        List<Doctor> doctors = doctorRepository.findByNameContainingIgnoreCaseAndSpecialtyIgnoreCase(name, specialty);
+        return filterDoctorByTime(doctors, timePeriod);
+    }
+
+    // 12. filterDoctorByTime
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorByTime(List<Doctor> doctors, String timePeriod) {
+        return doctors.stream()
+                .filter(doc -> doc.getAvailableTimes().stream()
+                        .anyMatch(time -> isInTimePeriod(time, timePeriod)))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isInTimePeriod(LocalTime time, String timePeriod) {
+        switch (timePeriod.toUpperCase()) {
+            case "AM":
+                return time.isBefore(LocalTime.NOON);
+            case "PM":
+                return !time.isBefore(LocalTime.NOON);
+            default:
+                return true; // no filter if unknown
+        }
+    }
+
+    // 13. filterDoctorByNameAndTime
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorByNameAndTime(String name, String timePeriod) {
+        List<Doctor> doctors = doctorRepository.findByNameLike(name);
+        return filterDoctorByTime(doctors, timePeriod);
+    }
+
+    // 14. filterDoctorByNameAndSpecility
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorByNameAndSpecility(String name, String specialty) {
+        return doctorRepository.findByNameContainingIgnoreCaseAndSpecialtyIgnoreCase(name, specialty);
+    }
+
+    // 15. filterDoctorByTimeAndSpecility
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorByTimeAndSpecility(String specialty, String timePeriod) {
+        List<Doctor> doctors = doctorRepository.findBySpecialtyIgnoreCase(specialty);
+        return filterDoctorByTime(doctors, timePeriod);
+    }
+
+    // 16. filterDoctorBySpecility
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorBySpecility(String specialty) {
+        return doctorRepository.findBySpecialtyIgnoreCase(specialty);
+    }
+
+    // 17. filterDoctorsByTime
+    @Transactional(readOnly = true)
+    public List<Doctor> filterDoctorsByTime(String timePeriod) {
+        List<Doctor> doctors = doctorRepository.findAll();
+        return filterDoctorByTime(doctors, timePeriod);
+    }
+}
+
 
 // 1. **Add @Service Annotation**:
 //    - This class should be annotated with `@Service` to indicate that it is a service layer class.
@@ -87,6 +281,3 @@ public class DoctorService {
 //    - Filters all doctors based on their availability during a specific time period (AM/PM).
 //    - The method checks all doctors' available times and returns those available during the specified time period.
 //    - Instruction: Ensure proper filtering logic to handle AM/PM time periods.
-
-   
-}

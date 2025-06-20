@@ -1,6 +1,74 @@
 package com.project.back_end.repo;
 
-public interface AppointmentRepository  {
+import com.project.back_end.model.Appointment;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
+
+    // 1. Find appointments for a doctor within a time range (with eager fetch of availableTimes)
+    @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.doctor.availableTimes WHERE a.doctor.id = :doctorId AND a.appointmentTime BETWEEN :start AND :end")
+    List<Appointment> findByDoctorIdAndAppointmentTimeBetween(
+            @Param("doctorId") Long doctorId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
+    // 2. Find appointments for a doctor with patient name filter (case-insensitive) within time range, fetching doctor and patient details eagerly
+    @Query("SELECT a FROM Appointment a " +
+           "LEFT JOIN FETCH a.doctor d " +
+           "LEFT JOIN FETCH a.patient p " +
+           "WHERE d.id = :doctorId AND LOWER(p.name) LIKE LOWER(CONCAT('%', :patientName, '%')) " +
+           "AND a.appointmentTime BETWEEN :start AND :end")
+    List<Appointment> findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
+            @Param("doctorId") Long doctorId,
+            @Param("patientName") String patientName,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
+    // 3. Delete all appointments by doctorId
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Appointment a WHERE a.doctor.id = :doctorId")
+    void deleteAllByDoctorId(@Param("doctorId") Long doctorId);
+
+    // 4. Find all appointments by patientId
+    List<Appointment> findByPatientId(Long patientId);
+
+    // 5. Find appointments by patientId and status, ordered by appointmentTime ascending
+    List<Appointment> findByPatient_IdAndStatusOrderByAppointmentTimeAsc(Long patientId, int status);
+
+    // 6. Filter appointments by doctor name (like) and patient id
+    @Query("SELECT a FROM Appointment a " +
+           "JOIN a.doctor d " +
+           "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :doctorName, '%')) " +
+           "AND a.patient.id = :patientId")
+    List<Appointment> filterByDoctorNameAndPatientId(@Param("doctorName") String doctorName, @Param("patientId") Long patientId);
+
+    // 7. Filter appointments by doctor name, patient id and status
+    @Query("SELECT a FROM Appointment a " +
+           "JOIN a.doctor d " +
+           "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :doctorName, '%')) " +
+           "AND a.patient.id = :patientId " +
+           "AND a.status = :status")
+    List<Appointment> filterByDoctorNameAndPatientIdAndStatus(@Param("doctorName") String doctorName, 
+                                                              @Param("patientId") Long patientId, 
+                                                              @Param("status") int status);
+
+    // 8. Update status of an appointment by id
+    @Modifying
+    @Transactional
+    @Query("UPDATE Appointment a SET a.status = :status WHERE a.id = :id")
+    void updateStatus(@Param("status") int status, @Param("id") long id);
+}
+
 
    // 1. Extend JpaRepository:
 //    - The repository extends JpaRepository<Appointment, Long>, which gives it basic CRUD functionality.
@@ -63,4 +131,3 @@ public interface AppointmentRepository  {
 //    - The @Repository annotation marks this interface as a Spring Data JPA repository.
 //    - Spring Data JPA automatically implements this repository, providing the necessary CRUD functionality and custom queries defined in the interface.
 
-}

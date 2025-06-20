@@ -1,6 +1,126 @@
 package com.project.back_end.DTO;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 public class AppointmentDTO {
+
+    // 1.
+    private Long id;
+
+    // 2.
+    private Long doctorId;
+
+    // 3.
+    private String doctorName;
+
+    // 4.
+    private Long patientId;
+
+    // 5.
+    private String patientName;
+
+    // 6.
+    private String patientEmail;
+
+    // 7.
+    private String patientPhone;
+
+    // 8.
+    private String patientAddress;
+
+    // 9.
+    private LocalDateTime appointmentTime;
+
+    // 10.
+    private int status;
+
+    // 11. 12. 13. - Derived fields (not stored, but computed)
+    // We'll implement custom getters for these
+
+    // 14. Constructor with all relevant fields
+    public AppointmentDTO(Long id, Long doctorId, String doctorName, Long patientId, String patientName,
+                          String patientEmail, String patientPhone, String patientAddress,
+                          LocalDateTime appointmentTime, int status) {
+        this.id = id;
+        this.doctorId = doctorId;
+        this.doctorName = doctorName;
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.patientEmail = patientEmail;
+        this.patientPhone = patientPhone;
+        this.patientAddress = patientAddress;
+        this.appointmentTime = appointmentTime;
+        this.status = status;
+    }
+
+    // 15. Getters
+
+    public Long getId() {
+        return id;
+    }
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public String getDoctorName() {
+        return doctorName;
+    }
+
+    public Long getPatientId() {
+        return patientId;
+    }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public String getPatientEmail() {
+        return patientEmail;
+    }
+
+    public String getPatientPhone() {
+        return patientPhone;
+    }
+
+    public String getPatientAddress() {
+        return patientAddress;
+    }
+
+    public LocalDateTime getAppointmentTime() {
+        return appointmentTime;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    // Custom getters:
+
+    /**
+     * Extracts and returns only the date part of appointmentTime.
+     */
+    public LocalDate getAppointmentDate() {
+        return appointmentTime.toLocalDate();
+    }
+
+    /**
+     * Extracts and returns only the time part of appointmentTime.
+     */
+    public LocalTime getAppointmentTimeOnly() {
+        return appointmentTime.toLocalTime();
+    }
+
+    /**
+     * Calculates the end time of the appointment by adding 1 hour to appointmentTime.
+     */
+    public LocalDateTime getEndTime() {
+        return appointmentTime.plusHours(1);
+    }
+}
+
 // 1. 'id' field:
 //    - Type: private Long
 //    - Description:
@@ -87,4 +207,4 @@ public class AppointmentDTO {
 //    - Standard getter methods are provided for all fields: id, doctorId, doctorName, patientId, patientName, patientEmail, patientPhone, patientAddress, appointmentTime, status, appointmentDate, appointmentTimeOnly, and endTime.
 //    - These methods allow access to the values of the fields in the AppointmentDTO object.
 
-}
+

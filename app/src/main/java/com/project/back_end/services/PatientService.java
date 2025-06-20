@@ -1,6 +1,140 @@
+
 package com.project.back_end.services;
 
+import com.project.back_end.model.Patient;
+import com.project.back_end.model.Appointment;
+import com.project.back_end.repo.PatientRepository;
+import com.project.back_end.repo.AppointmentRepository;
+import com.project.back_end.dto.AppointmentDTO;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.logging.Logger;
+
+@Service
 public class PatientService {
+
+    private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final TokenService tokenService;
+    private final Logger logger = Logger.getLogger(PatientService.class.getName());
+
+    // Constructor injection for dependencies
+    public PatientService(PatientRepository patientRepository,
+                          AppointmentRepository appointmentRepository,
+                          TokenService tokenService) {
+        this.patientRepository = patientRepository;
+        this.appointmentRepository = appointmentRepository;
+        this.tokenService = tokenService;
+    }
+
+    // 3. createPatient method
+    public int createPatient(Patient patient) {
+        try {
+            patientRepository.save(patient);
+            return 1;
+        } catch (Exception e) {
+            logger.severe("Failed to create patient: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    // 4. getPatientAppointment method
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getPatientAppointment(Long patientId) {
+        try {
+            List<Appointment> appointments = appointmentRepository.findByPatientId(patientId);
+            return appointments.stream()
+                    .map(AppointmentDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.severe("Error fetching appointments for patientId " + patientId + ": " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // 5. filterByCondition method
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> filterByCondition(Long patientId, String condition) {
+        try {
+            int status;
+            if ("future".equalsIgnoreCase(condition)) {
+                status = 0;
+            } else if ("past".equalsIgnoreCase(condition)) {
+                status = 1;
+            } else {
+                logger.warning("Invalid condition parameter: " + condition);
+                return List.of();
+            }
+            List<Appointment> filtered = appointmentRepository.findByPatientIdAndStatus(patientId, status);
+            return filtered.stream()
+                    .map(AppointmentDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.severe("Error filtering appointments by condition: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // 6. filterByDoctor method
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> filterByDoctor(Long patientId, String doctorName) {
+        try {
+            List<Appointment> filtered = appointmentRepository.findByPatientIdAndDoctorNameContainingIgnoreCase(patientId, doctorName);
+            return filtered.stream()
+                    .map(AppointmentDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.severe("Error filtering appointments by doctor: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // 7. filterByDoctorAndCondition method
+    @Transactional(readOnly = true)
+    public List<AppointmentDTO> filterByDoctorAndCondition(Long patientId, String doctorName, String condition) {
+        try {
+            int status;
+            if ("future".equalsIgnoreCase(condition)) {
+                status = 0;
+            } else if ("past".equalsIgnoreCase(condition)) {
+                status = 1;
+            } else {
+                logger.warning("Invalid condition parameter: " + condition);
+                return List.of();
+            }
+            List<Appointment> filtered = appointmentRepository.findByPatientIdAndDoctorNameContainingIgnoreCaseAndStatus(patientId, doctorName, status);
+            return filtered.stream()
+                    .map(AppointmentDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.severe("Error filtering appointments by doctor and condition: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    // 8. getPatientDetails method
+    public Optional<Patient> getPatientDetails(String token) {
+        try {
+            String email = tokenService.extractEmail(token);
+            if (email == null || email.isEmpty()) {
+                logger.warning("Token did not contain a valid email");
+                return Optional.empty();
+            }
+            return Optional.ofNullable(patientRepository.findByEmail(email));
+        } catch (Exception e) {
+            logger.severe("Error fetching patient details: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+}
+
+
+
+
 // 1. **Add @Service Annotation**:
 //    - The `@Service` annotation is used to mark this class as a Spring service component. 
 //    - It will be managed by Spring's container and used for business logic related to patients and appointments.
@@ -52,7 +186,3 @@ public class PatientService {
 // 10. **Use of DTOs (Data Transfer Objects)**:
 //    - The service uses `AppointmentDTO` to transfer appointment-related data between layers. This ensures that sensitive or unnecessary data (e.g., password or private patient information) is not exposed in the response.
 //    - Instruction: Ensure that DTOs are used appropriately to limit the exposure of internal data and only send the relevant fields to the client.
-
-
-
-}

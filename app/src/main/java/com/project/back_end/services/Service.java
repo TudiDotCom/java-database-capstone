@@ -1,6 +1,171 @@
+
 package com.project.back_end.services;
 
+import com.project.back_end.model.Admin;
+import com.project.back_end.model.Doctor;
+import com.project.back_end.model.Patient;
+import com.project.back_end.repo.AdminRepository;
+import com.project.back_end.repo.DoctorRepository;
+import com.project.back_end.repo.PatientRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.logging.Logger;
+
+@Service
 public class Service {
+
+    private final TokenService tokenService;
+    private final AdminRepository adminRepository;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
+    private final AppointmentService appointmentService;
+    private final PatientService patientService;
+    private final Logger logger = Logger.getLogger(Service.class.getName());
+
+    // Constructor injection for all dependencies
+    public Service(TokenService tokenService,
+                   AdminRepository adminRepository,
+                   DoctorRepository doctorRepository,
+                   PatientRepository patientRepository,
+                   AppointmentService appointmentService,
+                   PatientService patientService) {
+        this.tokenService = tokenService;
+        this.adminRepository = adminRepository;
+        this.doctorRepository = doctorRepository;
+        this.patientRepository = patientRepository;
+        this.appointmentService = appointmentService;
+        this.patientService = patientService;
+    }
+
+    // 3. validateToken Method
+    public ResponseEntity<String> validateToken(String token, String userEmail) {
+        try {
+            if (token == null || !tokenService.validateToken(token, userEmail)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body("Invalid or expired token.");
+            }
+            return ResponseEntity.ok("Token is valid.");
+        } catch (Exception e) {
+            logger.severe("Error validating token: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Internal error during token validation.");
+        }
+    }
+
+    // 4. validateAdmin Method
+    public ResponseEntity<String> validateAdmin(String username, String password) {
+        try {
+            Admin admin = adminRepository.findByUsername(username);
+            if (admin == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Admin not found.");
+            }
+            if (!admin.getPassword().equals(password)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password.");
+            }
+            String token = tokenService.generateToken(admin.getUsername());
+            return ResponseEntity.ok(token);
+        } catch (Exception e) {
+            logger.severe("Error validating admin login: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Internal server error during admin validation.");
+        }
+    }
+
+    // 5. filterDoctor Method
+    @Transactional
+    public List<Doctor> filterDoctor(String name, String specialty, String timePeriod) {
+        // Logic to handle various combinations of filters:
+        // If none provided, return all doctors.
+        // Otherwise filter based on the parameters.
+        // Delegation to doctorService is recommended for modularity.
+        if ((name == null || name.isEmpty()) &&
+            (specialty == null || specialty.isEmpty()) &&
+            (timePeriod == null || timePeriod.isEmpty())) {
+            return doctorRepository.findAll();
+        }
+        // Assume doctorService has a method like filterDoctorsByNameSpecialtyAndTime
+        return doctorRepository.filterDoctorsByNameSpecialtyAndTime(name, specialty, timePeriod);
+    }
+
+    // 6. validateAppointment Method
+    public int validateAppointment(Long doctorId, String appointmentDate, String appointmentTime) {
+        try {
+            if (!doctorRepository.existsById(doctorId)) {
+                return -1; // Doctor does not exist
+            }
+            List<String> availableSlots = appointmentService.getDoctorAvailability(doctorId, appointmentDate);
+            for (String slot : availableSlots) {
+                if (slot.equals(appointmentTime)) {
+                    return 1; // Valid appointment time
+                }
+            }
+            return 0; // Time slot not available
+        } catch (Exception e) {
+            logger.severe("Error validating appointment: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    // 7. validatePatient Method
+    public boolean validatePatient(String email, String phone) {
+        try {
+            Patient patient = patientRepository.findByEmailOrPhone(email, phone);
+            return patient == null; // True if no matching patient found
+        } catch (Exception e) {
+            logger.severe("Error validating patient: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // 8. validatePatientLogin Method
+    public ResponseEntity<String> validatePatientLogin(String email, String password) {
+        try {
+            Patient patient = patientRepository.findByEmail(email);
+            if (patient == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Patient not found.");
+            }
+            if (!patient.getPassword().equals(password)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password.");
+            }
+            String token = tokenService.generateToken(patient.getEmail());
+            return ResponseEntity.ok(token);
+        } catch (Exception e) {
+            logger.severe("Error validating patient login: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Internal server error during patient login.");
+        }
+    }
+
+    // 9. filterPatient Method
+    public ResponseEntity<?> filterPatient(String token, String condition, String doctorName) {
+        try {
+            String email = tokenService.extractEmail(token);
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token.");
+            }
+            if ((condition == null || condition.isEmpty()) && (doctorName == null || doctorName.isEmpty())) {
+                // No filters, return all appointments
+                return ResponseEntity.ok(patientService.getPatientAppointment(email));
+            } else if (condition != null && !condition.isEmpty() && (doctorName == null || doctorName.isEmpty())) {
+                return ResponseEntity.ok(patientService.filterByCondition(email, condition));
+            } else if ((condition == null || condition.isEmpty()) && doctorName != null && !doctorName.isEmpty()) {
+                return ResponseEntity.ok(patientService.filterByDoctor(email, doctorName));
+            } else {
+                return ResponseEntity.ok(patientService.filterByDoctorAndCondition(email, doctorName, condition));
+            }
+        } catch (Exception e) {
+            logger.severe("Error filtering patient appointments: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Internal server error while filtering appointments.");
+        }
+    }
+}
+
+
 // 1. **@Service Annotation**
 // The @Service annotation marks this class as a service component in Spring. This allows Spring to automatically detect it through component scanning
 // and manage its lifecycle, enabling it to be injected into controllers or other services using @Autowired or constructor injection.
@@ -61,6 +226,3 @@ public class Service {
 // - Depending on which filters (condition, doctor name) are provided, it delegates the filtering logic to PatientService.
 // - If no filters are provided, it retrieves all appointments for the patient.
 // This flexible method supports patient-specific querying and enhances user experience on the client side.
-
-
-}
