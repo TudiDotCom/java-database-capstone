@@ -31,7 +31,7 @@ public class AppointmentController {
             @PathVariable String patientName,
             @PathVariable String token) {
         
-        if (!service.validateToken(token, "doctor")) {
+        if (!service.isTokenValid(token, "doctor")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Invalid or expired token"));
         }

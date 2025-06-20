@@ -1,9 +1,10 @@
 package com.project.back_end.services;
 
+import com.project.back_end.models.Patient;
 import com.project.back_end.repo.AppointmentRepository;
 import com.project.back_end.repo.DoctorRepository;
 import com.project.back_end.repo.PatientRepository;
-import com.project.back_end.model.Appointment;
+import com.project.back_end.models.Appointment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,6 +101,13 @@ public class AppointmentService {
             return appointmentRepository.findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
                     doctorId, patientName, dayStart, dayEnd);
         }
+    }
+    @Transactional(readOnly = true)
+    public List<Appointment>  getAppointmentsByDateAndPatient(String date, String patientName) {
+
+        Patient patient =  patientRepository.findByName(patientName);
+
+        return appointmentRepository.findByAppointmentTimeAndPatientId(LocalDateTime.parse(date),patient.getId());
     }
 
     // 8. Change Status

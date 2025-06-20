@@ -1,7 +1,7 @@
 package com.project.back_end.services;
 
-import com.project.back_end.model.Doctor;
-import com.project.back_end.model.Appointment;
+import com.project.back_end.models.Doctor;
+import com.project.back_end.models.Appointment;
 import com.project.back_end.repo.DoctorRepository;
 import com.project.back_end.repo.AppointmentRepository;
 import org.springframework.stereotype.Service;
@@ -122,7 +122,7 @@ public class DoctorService {
             return "Invalid password";
         }
         // Generate token (assuming tokenService generates JWT or similar)
-        return tokenService.generateToken(doctor);
+        return tokenService.generateToken(email);
     }
 
     // 10. findDoctorByName
@@ -136,7 +136,7 @@ public class DoctorService {
 
     // 11. filterDoctorsByNameSpecilityandTime
     @Transactional(readOnly = true)
-    public List<Doctor> filterDoctorsByNameSpecilityandTime(String name, String specialty, String timePeriod) {
+    public List<Doctor> filterDoctorsByNameSpecialtyAndTime(String name, String specialty, String timePeriod) {
         List<Doctor> doctors = doctorRepository.findByNameContainingIgnoreCaseAndSpecialtyIgnoreCase(name, specialty);
         return filterDoctorByTime(doctors, timePeriod);
     }
@@ -146,7 +146,7 @@ public class DoctorService {
     public List<Doctor> filterDoctorByTime(List<Doctor> doctors, String timePeriod) {
         return doctors.stream()
                 .filter(doc -> doc.getAvailableTimes().stream()
-                        .anyMatch(time -> isInTimePeriod(time, timePeriod)))
+                        .anyMatch(time -> isInTimePeriod(LocalTime.parse(time), timePeriod)))
                 .collect(Collectors.toList());
     }
 

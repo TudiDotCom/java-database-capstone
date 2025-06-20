@@ -84,17 +84,15 @@ public class TokenService {
             String email = extractEmail(token);
             if (email == null) return false;
 
-            switch (userRole.toLowerCase()) {
-                case "admin":
-                    return adminRepository.existsByEmail(email);
-                case "doctor":
-                    return doctorRepository.existsByEmail(email);
-                case "patient":
-                    return patientRepository.existsByEmail(email);
-                default:
+            return switch (userRole.toLowerCase()) {
+                case "admin" -> adminRepository.existsByEmail(email);
+                case "doctor" -> doctorRepository.existsByEmail(email);
+                case "patient" -> patientRepository.existsByEmail(email);
+                default -> {
                     logger.warning("Unknown user role: " + userRole);
-                    return false;
-            }
+                    yield false;
+                }
+            };
         } catch (Exception e) {
             logger.warning("Token validation error: " + e.getMessage());
             return false;

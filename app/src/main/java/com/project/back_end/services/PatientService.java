@@ -1,11 +1,11 @@
 
 package com.project.back_end.services;
 
-import com.project.back_end.model.Patient;
-import com.project.back_end.model.Appointment;
+import com.project.back_end.models.Patient;
+import com.project.back_end.models.Appointment;
 import com.project.back_end.repo.PatientRepository;
 import com.project.back_end.repo.AppointmentRepository;
-import com.project.back_end.dto.AppointmentDTO;
+import com.project.back_end.DTO.AppointmentDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,7 +69,7 @@ public class PatientService {
                 logger.warning("Invalid condition parameter: " + condition);
                 return List.of();
             }
-            List<Appointment> filtered = appointmentRepository.findByPatientIdAndStatus(patientId, status);
+            List<Appointment> filtered = appointmentRepository.findByPatient_IdAndStatusOrderByAppointmentTimeAsc(patientId, status);
             return filtered.stream()
                     .map(AppointmentDTO::fromEntity)
                     .collect(Collectors.toList());
@@ -83,7 +83,8 @@ public class PatientService {
     @Transactional(readOnly = true)
     public List<AppointmentDTO> filterByDoctor(Long patientId, String doctorName) {
         try {
-            List<Appointment> filtered = appointmentRepository.findByPatientIdAndDoctorNameContainingIgnoreCase(patientId, doctorName);
+//            List<Appointment> filtered = appointmentRepository.findByPatientIdAndDoctorNameContainingIgnoreCase(patientId, doctorName);
+            List<Appointment> filtered = appointmentRepository.filterByDoctorNameAndPatientId(doctorName, patientId);
             return filtered.stream()
                     .map(AppointmentDTO::fromEntity)
                     .collect(Collectors.toList());
@@ -106,7 +107,7 @@ public class PatientService {
                 logger.warning("Invalid condition parameter: " + condition);
                 return List.of();
             }
-            List<Appointment> filtered = appointmentRepository.findByPatientIdAndDoctorNameContainingIgnoreCaseAndStatus(patientId, doctorName, status);
+            List<Appointment> filtered = appointmentRepository.filterByDoctorNameAndPatientIdAndStatus(doctorName,patientId, status);
             return filtered.stream()
                     .map(AppointmentDTO::fromEntity)
                     .collect(Collectors.toList());
@@ -131,8 +132,6 @@ public class PatientService {
         }
     }
 }
-
-
 
 
 // 1. **Add @Service Annotation**:
@@ -177,7 +176,7 @@ public class PatientService {
 //    - Retrieves patient details using the `tokenService` to extract the patient's email from the provided token.
 //    - Once the email is extracted, it fetches the corresponding patient from the `patientRepository`.
 //    - It returns the patient's information in the response body.
-    //    - Instruction: Make sure that the token extraction process works correctly and patient details are fetched properly based on the extracted email.
+//    - Instruction: Make sure that the token extraction process works correctly and patient details are fetched properly based on the extracted email.
 
 // 9. **Handling Exceptions and Errors**:
 //    - The service methods handle exceptions using try-catch blocks and log any issues that occur. If an error occurs during database operations, the service responds with appropriate HTTP status codes (e.g., `500 Internal Server Error`).

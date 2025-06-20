@@ -1,9 +1,10 @@
 
 package com.project.back_end.services;
 
-import com.project.back_end.model.Admin;
-import com.project.back_end.model.Doctor;
-import com.project.back_end.model.Patient;
+import com.project.back_end.models.Admin;
+
+import com.project.back_end.models.Doctor;
+import com.project.back_end.models.Patient;
 import com.project.back_end.repo.AdminRepository;
 import com.project.back_end.repo.DoctorRepository;
 import com.project.back_end.repo.PatientRepository;
@@ -53,6 +54,15 @@ public class Service {
             logger.severe("Error validating token: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body("Internal error during token validation.");
+        }
+    }
+
+    public boolean isTokenValid(String token, String userRole) {
+        try {
+            return token != null && tokenService.validateToken(token, userRole);
+        } catch (Exception e) {
+            logger.severe("Error validating token: " + e.getMessage());
+            return false;
         }
     }
 

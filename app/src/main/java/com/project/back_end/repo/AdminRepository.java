@@ -1,6 +1,6 @@
 package com.project.back_end.repo;
 
-import com.project.back_end.model.Admin;  // Adjust the package path to your Admin entity
+import com.project.back_end.models.Admin;  // Adjust the package path to your Admin entity
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
