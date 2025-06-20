@@ -1,3 +1,82 @@
+// index.js
+
+// Import modal handling logic and base API URL
+import { openModal } from '../js/util.js';
+import { BASE_API_URL } from '../js/config/config.js';
+
+// Define API endpoints
+const ADMIN_API = `${BASE_API_URL}/admin/login`;
+const DOCTOR_API = `${BASE_API_URL}/doctor/login`;
+
+// Ensure DOM is loaded before running script
+window.onload = () => {
+  const adminBtn = document.getElementById('adminLogin');
+  const doctorBtn = document.getElementById('doctorLogin');
+
+  if (adminBtn) {
+    adminBtn.addEventListener('click', () => openModal('adminLogin'));
+  }
+
+  if (doctorBtn) {
+    doctorBtn.addEventListener('click', () => openModal('doctorLogin'));
+  }
+};
+
+// Admin login handler
+window.adminLoginHandler = async () => {
+  const username = document.getElementById('adminUsername').value;
+  const password = document.getElementById('adminPassword').value;
+
+  const admin = { username, password };
+
+  try {
+    const response = await fetch(ADMIN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(admin)
+    });
+
+    if (response.ok) {
+      const { token } = await response.json();
+      localStorage.setItem('token', token);
+      selectRole('admin');
+    } else {
+      alert('Invalid admin credentials.');
+    }
+  } catch (error) {
+    console.error('Admin login failed:', error);
+    alert('Something went wrong during admin login.');
+  }
+};
+
+// Doctor login handler
+window.doctorLoginHandler = async () => {
+  const email = document.getElementById('doctorEmail').value;
+  const password = document.getElementById('doctorPassword').value;
+
+  const doctor = { email, password };
+
+  try {
+    const response = await fetch(DOCTOR_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(doctor)
+    });
+
+    if (response.ok) {
+      const { token } = await response.json();
+      localStorage.setItem('token', token);
+      selectRole('doctor');
+    } else {
+      alert('Invalid doctor credentials.');
+    }
+  } catch (error) {
+    console.error('Doctor login failed:', error);
+    alert('Something went wrong during doctor login.');
+  }
+};
+
+
 /*
   Import the openModal function to handle showing login popups/modals
   Import the base API URL from the config file
